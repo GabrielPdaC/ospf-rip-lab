@@ -1,0 +1,57 @@
+name: ospf-lab
+
+topology:
+  nodes:
+    r0:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - config/r0/frr.conf:/etc/frr/frr.conf
+        - config/r0/daemons:/etc/frr/daemons
+
+    r1:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - config/r1/frr.conf:/etc/frr/frr.conf
+        - config/r1/daemons:/etc/frr/daemons
+
+    r2:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - config/r2/frr.conf:/etc/frr/frr.conf
+        - config/r2/daemons:/etc/frr/daemons
+
+    r3:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - config/r3/frr.conf:/etc/frr/frr.conf
+        - config/r3/daemons:/etc/frr/daemons
+
+    client:
+      kind: linux
+      image: alpine:latest
+
+    server:
+      kind: linux
+      image: alpine:latest
+
+    s1:
+      kind: linux
+      image: alpine:latest
+
+    s2:
+      kind: linux
+      image: alpine:latest
+
+  links:
+    - endpoints: ["client:eth1", "s1:eth1"]
+    - endpoints: ["s1:eth2",     "r0:eth1"]
+    - endpoints: ["r0:eth2",     "r1:eth1"]
+    - endpoints: ["r0:eth3",     "r2:eth1"]
+    - endpoints: ["r1:eth2",     "r3:eth1"]
+    - endpoints: ["r3:eth2",     "s2:eth1"]
+    - endpoints: ["r2:eth2",     "s2:eth2"]
+    - endpoints: ["s2:eth3",     "server:eth1"]

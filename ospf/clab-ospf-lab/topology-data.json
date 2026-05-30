@@ -1,0 +1,399 @@
+{
+  "name": "ospf-lab",
+  "type": "clab",
+  "clab": {
+    "config": {
+      "prefix": "clab",
+      "mgmt": {
+        "network": "clab",
+        "bridge": "br-72511955806b",
+        "ipv4-subnet": "172.20.20.0/24",
+        "ipv4-gw": "172.20.20.1",
+        "ipv6-subnet": "3fff:172:20:20::/64",
+        "ipv6-gw": "3fff:172:20:20::1",
+        "external-access": true
+      }
+    }
+  },
+  "ssh-pub-keys": [],
+  "nodes": {
+    "client": {
+      "index": "0",
+      "shortname": "client",
+      "longname": "clab-ospf-lab-client",
+      "fqdn": "client.ospf-lab.io",
+      "group": "",
+      "labdir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/client",
+      "kind": "linux",
+      "image": "alpine:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.7",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::7",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-72511955806b",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/client",
+        "clab-node-longname": "clab-ospf-lab-client",
+        "clab-node-name": "client",
+        "clab-node-type": "",
+        "clab-owner": "gabrielpdc",
+        "clab-topo-file": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/topology.yml",
+        "containerlab": "ospf-lab"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r0": {
+      "index": "1",
+      "shortname": "r0",
+      "longname": "clab-ospf-lab-r0",
+      "fqdn": "r0.ospf-lab.io",
+      "group": "",
+      "labdir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/r0",
+      "kind": "linux",
+      "image": "frrouting/frr:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.3",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::3",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-72511955806b",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/r0",
+        "clab-node-longname": "clab-ospf-lab-r0",
+        "clab-node-name": "r0",
+        "clab-node-type": "",
+        "clab-owner": "gabrielpdc",
+        "clab-topo-file": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/topology.yml",
+        "containerlab": "ospf-lab"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r1": {
+      "index": "2",
+      "shortname": "r1",
+      "longname": "clab-ospf-lab-r1",
+      "fqdn": "r1.ospf-lab.io",
+      "group": "",
+      "labdir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/r1",
+      "kind": "linux",
+      "image": "frrouting/frr:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.6",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::6",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-72511955806b",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/r1",
+        "clab-node-longname": "clab-ospf-lab-r1",
+        "clab-node-name": "r1",
+        "clab-node-type": "",
+        "clab-owner": "gabrielpdc",
+        "clab-topo-file": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/topology.yml",
+        "containerlab": "ospf-lab"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r2": {
+      "index": "3",
+      "shortname": "r2",
+      "longname": "clab-ospf-lab-r2",
+      "fqdn": "r2.ospf-lab.io",
+      "group": "",
+      "labdir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/r2",
+      "kind": "linux",
+      "image": "frrouting/frr:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.8",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::8",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-72511955806b",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/r2",
+        "clab-node-longname": "clab-ospf-lab-r2",
+        "clab-node-name": "r2",
+        "clab-node-type": "",
+        "clab-owner": "gabrielpdc",
+        "clab-topo-file": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/topology.yml",
+        "containerlab": "ospf-lab"
+      },
+      "port-bindings": [
+      ]
+    },
+    "r3": {
+      "index": "4",
+      "shortname": "r3",
+      "longname": "clab-ospf-lab-r3",
+      "fqdn": "r3.ospf-lab.io",
+      "group": "",
+      "labdir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/r3",
+      "kind": "linux",
+      "image": "frrouting/frr:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.2",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::2",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-72511955806b",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/r3",
+        "clab-node-longname": "clab-ospf-lab-r3",
+        "clab-node-name": "r3",
+        "clab-node-type": "",
+        "clab-owner": "gabrielpdc",
+        "clab-topo-file": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/topology.yml",
+        "containerlab": "ospf-lab"
+      },
+      "port-bindings": [
+      ]
+    },
+    "s1": {
+      "index": "5",
+      "shortname": "s1",
+      "longname": "clab-ospf-lab-s1",
+      "fqdn": "s1.ospf-lab.io",
+      "group": "",
+      "labdir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/s1",
+      "kind": "linux",
+      "image": "alpine:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.5",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::5",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-72511955806b",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/s1",
+        "clab-node-longname": "clab-ospf-lab-s1",
+        "clab-node-name": "s1",
+        "clab-node-type": "",
+        "clab-owner": "gabrielpdc",
+        "clab-topo-file": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/topology.yml",
+        "containerlab": "ospf-lab"
+      },
+      "port-bindings": [
+      ]
+    },
+    "s2": {
+      "index": "6",
+      "shortname": "s2",
+      "longname": "clab-ospf-lab-s2",
+      "fqdn": "s2.ospf-lab.io",
+      "group": "",
+      "labdir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/s2",
+      "kind": "linux",
+      "image": "alpine:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.9",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::9",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-72511955806b",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/s2",
+        "clab-node-longname": "clab-ospf-lab-s2",
+        "clab-node-name": "s2",
+        "clab-node-type": "",
+        "clab-owner": "gabrielpdc",
+        "clab-topo-file": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/topology.yml",
+        "containerlab": "ospf-lab"
+      },
+      "port-bindings": [
+      ]
+    },
+    "server": {
+      "index": "7",
+      "shortname": "server",
+      "longname": "clab-ospf-lab-server",
+      "fqdn": "server.ospf-lab.io",
+      "group": "",
+      "labdir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/server",
+      "kind": "linux",
+      "image": "alpine:latest",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.4",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::4",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-72511955806b",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/clab-ospf-lab/server",
+        "clab-node-longname": "clab-ospf-lab-server",
+        "clab-node-name": "server",
+        "clab-node-type": "",
+        "clab-owner": "gabrielpdc",
+        "clab-topo-file": "/mnt/c/Users/ResTIC55/workspace/unisinos/ospf-dijkstra/ospf/topology.yml",
+        "containerlab": "ospf-lab"
+      },
+      "port-bindings": [
+      ]
+    }
+  },
+  "links": [
+    {
+      "endpoints": {
+        "a": {
+          "node": "client",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:99:b8:13",
+          "peer": "z"
+        },
+        "z": {
+          "node": "s1",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:6b:0b:c4",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "s1",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:b4:1b:16",
+          "peer": "z"
+        },
+        "z": {
+          "node": "r0",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:4f:cd:dd",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "r0",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:d3:9b:95",
+          "peer": "z"
+        },
+        "z": {
+          "node": "r1",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:14:4a:64",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "r0",
+          "interface": "eth3",
+          "mac": "aa:c1:ab:56:65:47",
+          "peer": "z"
+        },
+        "z": {
+          "node": "r2",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:04:11:4c",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "r1",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:42:9e:d9",
+          "peer": "z"
+        },
+        "z": {
+          "node": "r3",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:c6:99:fb",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "r3",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:8a:72:5b",
+          "peer": "z"
+        },
+        "z": {
+          "node": "s2",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:7d:ad:35",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "r2",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:55:ed:2a",
+          "peer": "z"
+        },
+        "z": {
+          "node": "s2",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:33:49:e1",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "s2",
+          "interface": "eth3",
+          "mac": "aa:c1:ab:52:e8:3f",
+          "peer": "z"
+        },
+        "z": {
+          "node": "server",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:28:05:d5",
+          "peer": "a"
+        }
+      }
+    }
+  ]
+}
