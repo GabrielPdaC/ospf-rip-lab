@@ -105,262 +105,110 @@ Todas as demais interfaces utilizam o custo padrão de **10**.
 
 ## 3. Arquivos de Configuração
 
-### 3.1 topology.yml (compartilhado entre os dois labs, com nomes diferentes)
-
-```yaml
-name: ospf-lab   # alterado para rip-lab no laboratório RIP
-
-topology:
-  nodes:
-    r0:
-      kind: linux
-      image: frrouting/frr:latest
-      binds:
-        - config/r0/frr.conf:/etc/frr/frr.conf
-        - config/r0/daemons:/etc/frr/daemons
-
-    r1:
-      kind: linux
-      image: frrouting/frr:latest
-      binds:
-        - config/r1/frr.conf:/etc/frr/frr.conf
-        - config/r1/daemons:/etc/frr/daemons
-
-    r2:
-      kind: linux
-      image: frrouting/frr:latest
-      binds:
-        - config/r2/frr.conf:/etc/frr/frr.conf
-        - config/r2/daemons:/etc/frr/daemons
-
-    r3:
-      kind: linux
-      image: frrouting/frr:latest
-      binds:
-        - config/r3/frr.conf:/etc/frr/frr.conf
-        - config/r3/daemons:/etc/frr/daemons
-
-    client:
-      kind: linux
-      image: alpine:latest
-
-    server:
-      kind: linux
-      image: alpine:latest
-
-    s1:
-      kind: linux
-      image: alpine:latest
-
-    s2:
-      kind: linux
-      image: alpine:latest
-
-  links:
-    - endpoints: ["client:eth1", "s1:eth1"]
-    - endpoints: ["s1:eth2",     "r0:eth1"]
-    - endpoints: ["r0:eth2",     "r1:eth1"]
-    - endpoints: ["r0:eth3",     "r2:eth1"]
-    - endpoints: ["r1:eth2",     "r3:eth1"]
-    - endpoints: ["r3:eth2",     "s2:eth1"]
-    - endpoints: ["r2:eth2",     "s2:eth2"]
-    - endpoints: ["s2:eth3",     "server:eth1"]
-```
-
-### 3.2 daemons — Lab OSPF
+A estrutura de arquivos está organizada em dois diretórios independentes, um por protocolo:
 
 ```
-bgpd=no
-ospfd=yes
-ospf6d=no
-ripd=no
-...
-staticd=yes
+ospf/
+├── topology.yml
+└── config/
+    ├── r0/  (frr.conf  daemons)
+    ├── r1/  (frr.conf  daemons)
+    ├── r2/  (frr.conf  daemons)
+    └── r3/  (frr.conf  daemons)
+
+rip/
+├── topology.yml
+└── config/
+    ├── r0/  (frr.conf  daemons)
+    ├── r1/  (frr.conf  daemons)
+    ├── r2/  (frr.conf  daemons)
+    └── r3/  (frr.conf  daemons)
+
+setup.sh
+lab.sh
 ```
 
-### 3.3 daemons — Lab RIP
+### 3.1 topology.yml
 
-```
-bgpd=no
-ospfd=no
-ospf6d=no
-ripd=yes
-...
-staticd=yes
-```
+Define a topologia completa do laboratório: nós (roteadores, switches, cliente e servidor), imagens Docker utilizadas, mapeamento dos arquivos de configuração via `binds`, e os enlaces (`links`) entre as interfaces de cada nó.
 
-### 3.4 Configurações FRR — Lab OSPF
+| Lab | Arquivo |
+|-----|---------|
+| OSPF | [ospf/topology.yml](ospf/topology.yml) |
+| RIP | [rip/topology.yml](rip/topology.yml) |
 
-**config/r0/frr.conf**
-```
-frr version 9.0
-hostname r0
-log syslog informational
-!
-interface eth1
- ip address 10.0.0.1/30
-!
-interface eth2
- ip address 10.0.1.1/30
- ip ospf cost 10
-!
-interface eth3
- ip address 10.0.2.1/30
- ip ospf cost 40
-!
-router ospf
- ospf router-id 0.0.0.0
- network 10.0.0.0/30 area 0
- network 10.0.1.0/30 area 0
- network 10.0.2.0/30 area 0
-!
-```
+> **Diferença:** Os dois arquivos têm estrutura e enlaces idênticos. A única diferença deveria ser o campo `name` (`ospf-lab` vs `rip-lab`). No arquivo atual `rip/topology.yml`, o campo `name` está definido como `ospf-lab` — isso é uma inconsistência: o Containerlab usa esse nome para nomear os containers (ex.: `clab-ospf-lab-r0`), de modo que os containers do lab RIP seriam nomeados como se fossem OSPF, causando conflito caso os dois labs estejam rodando ao mesmo tempo.
 
-**config/r1/frr.conf**
-```
-frr version 9.0
-hostname r1
-log syslog informational
-!
-interface eth1
- ip address 10.0.1.2/30
-!
-interface eth2
- ip address 10.0.3.1/30
-!
-router ospf
- ospf router-id 1.1.1.1
- network 10.0.1.0/30 area 0
- network 10.0.3.0/30 area 0
-!
-```
+### 3.2 daemons
 
-**config/r2/frr.conf**
-```
-frr version 9.0
-hostname r2
-log syslog informational
-!
-interface eth1
- ip address 10.0.2.2/30
- ip ospf cost 40
-!
-interface eth2
- ip address 10.0.4.1/30
-!
-ip route 10.0.5.0/30 10.0.4.2
-!
-router ospf
- ospf router-id 2.2.2.2
- network 10.0.2.0/30 area 0
- network 10.0.4.0/30 area 0
- redistribute static
-!
-```
+Lido pelo FRR na inicialização do container para decidir quais daemons de roteamento ativar. Cada roteador possui o seu próprio, montado via bind em `/etc/frr/daemons` dentro do container. O conteúdo é idêntico entre r0, r1, r2 e r3 dentro de cada lab.
 
-**config/r3/frr.conf**
-```
-frr version 9.0
-hostname r3
-log syslog informational
-!
-interface eth1
- ip address 10.0.3.2/30
-!
-interface eth2
- ip address 10.0.5.1/30
-!
-router ospf
- ospf router-id 3.3.3.3
- network 10.0.3.0/30 area 0
- network 10.0.5.0/30 area 0
-!
-```
+| Lab | Arquivo de referência |
+|-----|-----------------------|
+| OSPF | [ospf/config/r0/daemons](ospf/config/r0/daemons) |
+| RIP | [rip/config/r0/daemons](rip/config/r0/daemons) |
 
-### 3.5 Configurações FRR — Lab RIP
+> **Diferença:** No lab OSPF, o arquivo ativa `ospfd=yes` e mantém `ripd=no`, o que está correto. O arquivo do lab RIP deveria inverter isso (`ripd=yes` e `ospfd=no`), mas no estado atual do repositório ele é idêntico ao do lab OSPF — o daemon RIP não será iniciado.
 
-**config/r0/frr.conf**
-```
-frr version 9.0
-hostname r0
-log syslog informational
-!
-interface eth1
- ip address 10.0.0.1/30
-!
-interface eth2
- ip address 10.0.1.1/30
-!
-interface eth3
- ip address 10.0.2.1/30
-!
-router rip
- network 10.0.0.0/30
- network 10.0.1.0/30
- network 10.0.2.0/30
- timers basic 10 30 30
-!
-```
+### 3.3 frr.conf — por roteador
 
-**config/r1/frr.conf**
-```
-frr version 9.0
-hostname r1
-log syslog informational
-!
-interface eth1
- ip address 10.0.1.2/30
-!
-interface eth2
- ip address 10.0.3.1/30
-!
-router rip
- network 10.0.1.0/30
- network 10.0.3.0/30
- timers basic 10 30 30
-!
-```
+Arquivo de configuração principal do FRR. Define os endereços IP das interfaces e o bloco de configuração do protocolo de roteamento ativo. Cada roteador possui o seu em `config/<rX>/frr.conf`, montado no container em `/etc/frr/frr.conf`.
 
-**config/r2/frr.conf**
-```
-frr version 9.0
-hostname r2
-log syslog informational
-!
-interface eth1
- ip address 10.0.2.2/30
-!
-interface eth2
- ip address 10.0.4.1/30
-!
-ip route 10.0.5.0/30 10.0.4.2
-!
-router rip
- network 10.0.2.0/30
- network 10.0.4.0/30
- redistribute static
- timers basic 10 30 30
-!
-```
+#### R0 — ponto de entrada da rede (três interfaces)
 
-**config/r3/frr.conf**
-```
-frr version 9.0
-hostname r3
-log syslog informational
-!
-interface eth1
- ip address 10.0.3.2/30
-!
-interface eth2
- ip address 10.0.5.1/30
-!
-router rip
- network 10.0.3.0/30
- network 10.0.5.0/30
- timers basic 10 30 30
-!
-```
+| Lab | Arquivo |
+|-----|---------|
+| OSPF | [ospf/config/r0/frr.conf](ospf/config/r0/frr.conf) |
+| RIP | [rip/config/r0/frr.conf](rip/config/r0/frr.conf) |
+
+Configura três interfaces: `eth1` (acesso via S1), `eth2` (enlace para R1) e `eth3` (enlace para R2). No lab OSPF, `eth2` recebe custo 10 e `eth3` custo 40, forçando a preferência pelo caminho via R1.
+
+> **Diferença:** O arquivo do lab RIP é atualmente idêntico ao do lab OSPF — usa `router ospf` com custos de enlace. O esperado seria substituir o bloco por `router rip` anunciando as mesmas redes, sem custos (RIP não usa custo de enlace como métrica).
+
+#### R1 — caminho preferido pelo OSPF (duas interfaces)
+
+| Lab | Arquivo |
+|-----|---------|
+| OSPF | [ospf/config/r1/frr.conf](ospf/config/r1/frr.conf) |
+| RIP | [rip/config/r1/frr.conf](rip/config/r1/frr.conf) |
+
+Configura `eth1` (enlace para R0) e `eth2` (enlace para R3). Anuncia as duas sub-redes no protocolo ativo.
+
+> **Diferença:** O arquivo do lab RIP é idêntico ao do lab OSPF — usa `router ospf` em vez de `router rip`.
+
+#### R2 — caminho preferido pelo RIP / backup do OSPF (duas interfaces + rota estática)
+
+| Lab | Arquivo |
+|-----|---------|
+| OSPF | [ospf/config/r2/frr.conf](ospf/config/r2/frr.conf) |
+| RIP | [rip/config/r2/frr.conf](rip/config/r2/frr.conf) |
+
+Configura `eth1` (enlace para R0, custo 40 no OSPF) e `eth2` (enlace direto para S2). É o único roteador com rota estática, necessária para alcançar a sub-rede além de S2 (`10.0.5.0/30`).
+
+> **Diferença:** O arquivo do lab RIP é o único com conteúdo diferente do lab OSPF: adiciona `ip route 10.0.5.0/30 10.0.4.2` e `redistribute static` no bloco de roteamento. Porém ainda usa `router ospf` — o bloco deveria ser `router rip` para um lab RIP correto. A rota estática e o `redistribute` em si fazem sentido para ambos os protocolos.
+
+#### R3 — ponto de saída via R1 (duas interfaces)
+
+| Lab | Arquivo |
+|-----|---------|
+| OSPF | [ospf/config/r3/frr.conf](ospf/config/r3/frr.conf) |
+| RIP | [rip/config/r3/frr.conf](rip/config/r3/frr.conf) |
+
+Configura `eth1` (enlace para R1) e `eth2` (enlace para S2). Anuncia as duas sub-redes no protocolo ativo.
+
+> **Diferença:** O arquivo do lab RIP é idêntico ao do lab OSPF — usa `router ospf` em vez de `router rip`.
+
+### 3.4 setup.sh
+
+[setup.sh](setup.sh)
+
+Script de instalação e primeira execução. Verifica e instala Docker e Containerlab caso não estejam presentes, copia os diretórios `ospf/` e `rip/` para `~/ospf-routing-lab` e `~/rip-routing-lab`, sobe os dois labs com `containerlab deploy` e aguarda 45 segundos de convergência antes de exibir as tabelas de roteamento iniciais.
+
+### 3.5 lab.sh
+
+[lab.sh](lab.sh)
+
+Script de operação do laboratório executado a partir do próprio diretório do repositório, sem necessidade de copiar arquivos. Suporta os subcomandos `up`, `down`, `status` e `restart`, gerenciando os dois labs simultaneamente.
 
 ---
 
