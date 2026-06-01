@@ -1,0 +1,436 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+
+\sloppy
+
+\title{Roteamento de Dados na Internet: Modelagem em Grafos e Comparação entre OSPF e RIP}
+
+\author{Gabriel Pereira da Conceição\inst{1}, Kailan Marlon Spier\inst{2}, Rodrigo Colling Klaus\inst{3}}
+
+\address{Escola Politécnica -- Universidade do Vale do Rio dos Sinos (UNISINOS)\\
+  São Leopoldo -- RS -- Brasil
+  \email{gabrielpereiradaconceicao@gmail.com}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This article examines how the Internet's routing problem can be modeled as a
+  weighted directed graph, where routers are vertices, network links are edges,
+  and link costs are weights. Two widely deployed routing protocols are analyzed
+  and experimentally compared: OSPF (Open Shortest Path First), which applies
+  Dijkstra's algorithm to select minimum-cost paths, and RIP (Routing Information
+  Protocol), which uses a distributed Bellman-Ford approach based solely on hop
+  count. A virtual laboratory built with Containerlab and FRRouting demonstrates
+  that over the same topology, OSPF correctly selects the higher-quality path while
+  RIP chooses the path with fewer hops, which in this case has lower link quality.
+  Failover behavior under link failure is also validated.
+\end{abstract}
+
+\begin{resumo}
+  Este artigo analisa como o problema de roteamento na Internet pode ser modelado
+  como um grafo ponderado, onde roteadores são vértices, enlaces são arestas e os
+  custos dos enlaces são os pesos. Dois protocolos de roteamento amplamente
+  utilizados são comparados experimentalmente: o OSPF (\textit{Open Shortest Path
+  First}), que aplica o algoritmo de Dijkstra para selecionar caminhos de menor
+  custo, e o RIP (\textit{Routing Information Protocol}), que utiliza uma variante
+  distribuída do algoritmo de Bellman-Ford baseada apenas na contagem de saltos.
+  Um laboratório virtual construído com Containerlab e FRRouting demonstra que,
+  sobre a mesma topologia, o OSPF seleciona corretamente o caminho de maior
+  qualidade enquanto o RIP escolhe o caminho com menos saltos, que neste caso possui
+  enlace de menor qualidade. O comportamento de \textit{failover} após falha de
+  enlace também é validado.
+\end{resumo}
+
+% =============================================================================
+\section{Introdução}
+% =============================================================================
+
+A Internet é a maior rede de computadores já construída, interligando bilhões de
+dispositivos por meio de uma malha de roteadores distribuídos por todo o mundo.
+Para que um pacote de dados chegue ao seu destino, cada roteador no caminho precisa
+decidir, de forma autônoma e em tempo real, para qual vizinho encaminhar o tráfego.
+Esse processo é chamado de \textbf{roteamento}, e é regido por \textbf{protocolos
+de roteamento} que os roteadores utilizam para trocar informações sobre a topologia
+da rede e calcular os melhores caminhos \cite{tanenbaum2011}.
+
+Dois dos protocolos mais relevantes nesse contexto são o \textbf{OSPF}
+(\textit{Open Shortest Path First}) e o \textbf{RIP} (\textit{Routing Information
+Protocol}). O OSPF é um protocolo de estado de enlace que constrói um mapa completo
+da rede e aplica o algoritmo de Dijkstra para encontrar o caminho de menor custo
+entre dois pontos. O RIP é um protocolo de vetor de distância que utiliza uma
+variante distribuída do algoritmo de Bellman-Ford, tomando decisões com base apenas
+na contagem de saltos — isto é, no número de roteadores traversados até o destino
+\cite{rfc2328, rfc2453}.
+
+A relação entre roteamento e teoria dos grafos é direta: uma rede de computadores
+pode ser representada como um grafo ponderado, onde roteadores são vértices, enlaces
+são arestas e os custos de cada enlace são os pesos. Nessa representação, calcular o
+melhor caminho de roteamento equivale a resolver o problema do caminho de custo
+mínimo em um grafo — problema clássico estudado há décadas na ciência da
+computação.
+
+Este trabalho tem como objetivo modelar formalmente o problema de roteamento como
+um grafo ponderado, comparar o comportamento do OSPF e do RIP sobre a mesma
+topologia e validar experimentalmente as diferenças por meio de um laboratório
+virtual. A relevância prática é imediata: a escolha equivocada de protocolo ou
+configuração incorreta de métricas pode degradar significativamente o desempenho de
+uma rede de produção.
+
+O artigo está organizado da seguinte forma: a Seção~\ref{sec:fundamentacao}
+apresenta os conceitos teóricos de grafos e algoritmos envolvidos; a
+Seção~\ref{sec:modelagem} descreve a modelagem do problema e a topologia utilizada;
+a Seção~\ref{sec:discussao} apresenta os experimentos e discute os resultados; e a
+Seção~\ref{sec:conclusao} sintetiza as conclusões.
+
+% =============================================================================
+\section{Fundamentação Teórica}
+\label{sec:fundamentacao}
+% =============================================================================
+
+\subsection{Teoria dos Grafos e Roteamento}
+
+Um \textbf{grafo} $G = (V, E)$ é composto por um conjunto de vértices $V$ e um
+conjunto de arestas $E \subseteq V \times V$. Quando cada aresta possui um valor
+numérico associado, diz-se que o grafo é \textbf{ponderado}. No contexto de redes
+de computadores, os vértices representam roteadores e as arestas representam os
+enlaces físicos ou lógicos entre eles. O peso de cada aresta pode expressar
+latência, largura de banda, custo administrativo ou qualquer métrica relevante para
+a qualidade do enlace \cite{cormen2022}.
+
+O problema central do roteamento é encontrar o \textbf{caminho de custo mínimo}
+entre um vértice de origem e um vértice de destino. Esse problema é resolvido de
+formas distintas pelo OSPF e pelo RIP.
+
+\subsection{Algoritmo de Dijkstra e o OSPF}
+
+O algoritmo de Dijkstra resolve o problema do caminho mínimo de fonte única em
+grafos com pesos não negativos com complexidade $O((V + E) \log V)$ utilizando uma
+fila de prioridade \cite{dijkstra1959}. O OSPF adota uma abordagem de
+\textit{link-state}: cada roteador propaga informações sobre seus próprios enlaces
+para todos os outros roteadores da rede (via protocolo de \textit{flooding}),
+permitindo que cada um construa um mapa completo e idêntico da topologia. Sobre
+esse mapa, cada roteador executa o algoritmo de Dijkstra de forma independente para
+calcular as rotas ótimas para todos os destinos \cite{rfc2328}.
+
+A métrica padrão do OSPF é o \textbf{custo do enlace}, calculado em função da
+largura de banda da interface. Custos menores indicam enlaces de maior qualidade;
+o protocolo sempre prefere o caminho cujo somatório de custos seja o menor.
+
+\subsection{Algoritmo de Bellman-Ford e o RIP}
+
+O algoritmo de Bellman-Ford calcula caminhos mínimos a partir de uma única fonte em
+grafos que podem conter arestas com pesos negativos, com complexidade $O(V \cdot
+E)$ \cite{bellman1958}. O RIP implementa uma versão distribuída desse algoritmo,
+conhecida como \textit{distance-vector}: cada roteador mantém uma tabela com a
+distância estimada até cada destino e a compartilha periodicamente com seus
+vizinhos diretos. Os roteadores atualizam suas tabelas ao receber as tabelas dos
+vizinhos, convergindo iterativamente para as rotas ótimas.
+
+A métrica do RIP é exclusivamente a \textbf{contagem de saltos} (\textit{hop
+count}) — o número de roteadores atravessados até o destino. Esse critério ignora
+completamente a qualidade dos enlaces, o que pode levar à seleção de caminhos de
+desempenho inferior em redes heterogêneas. Adicionalmente, o RIP impõe um limite
+máximo de 15 saltos, tornando-o inadequado para redes de grande escala \cite{rfc2453}.
+
+% =============================================================================
+\section{Modelagem do Problema}
+\label{sec:modelagem}
+% =============================================================================
+
+\subsection{Representação em Grafo}
+
+A rede foi modelada como um grafo ponderado não direcionado $G = (V, E, w)$, onde:
+
+\begin{itemize}
+  \item \textbf{Vértices} $V$: cada dispositivo de rede (roteador, switch, cliente
+        e servidor) corresponde a um vértice;
+  \item \textbf{Arestas} $E$: cada enlace físico entre dois dispositivos
+        corresponde a uma aresta bidirecional;
+  \item \textbf{Função de peso} $w: E \to \mathbb{Z}^+$: o custo OSPF do enlace,
+        que reflete a qualidade relativa da conexão.
+\end{itemize}
+
+\subsection{Topologia e Objetivos do Design}
+
+A topologia foi projetada para evidenciar três conceitos fundamentais: (i) o OSPF
+prefere o caminho de menor custo total, mesmo que ele possua mais saltos; (ii) o
+RIP seleciona o caminho de menor contagem de saltos, mesmo que ele possua enlaces
+de menor qualidade; e (iii) o OSPF realiza \textit{failover} automático após falha
+de enlace.
+
+A Figura~\ref{fig:topologia} ilustra a topologia utilizada.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  node distance=1.8cm and 2.2cm,
+  router/.style={circle, draw, thick, minimum size=1cm, font=\bfseries\small},
+  host/.style={rectangle, draw, thick, minimum size=0.9cm, font=\small},
+  link/.style={thick},
+  ospf/.style={thick, blue!70!black},
+  rip/.style={thick, red!70!black, dashed}
+]
+  \node[host] (client) {Client};
+  \node[host, right=1.5cm of client] (s1) {S1};
+  \node[router, right=1.8cm of s1] (r0) {R0};
+  \node[router, above right=1.4cm and 2cm of r0] (r1) {R1};
+  \node[router, below right=1.4cm and 2cm of r0] (r2) {R2};
+  \node[router, right=2cm of r1] (r3) {R3};
+  \node[host, below right=1.4cm and 1cm of r3] (s2) {S2};
+  \node[host, right=1.5cm of s2] (server) {Server};
+
+  \draw[link] (client) -- (s1);
+  \draw[link] (s1) -- (r0);
+  \draw[ospf] (r0) -- node[above, font=\tiny, blue!70!black]{custo 10} (r1);
+  \draw[rip]  (r0) -- node[below, font=\tiny, red!70!black]{custo 40} (r2);
+  \draw[link] (r1) -- (r3);
+  \draw[link] (r3) -- (s2);
+  \draw[link] (r2) -- (s2);
+  \draw[link] (s2) -- (server);
+\end{tikzpicture}
+\caption{Topologia da rede. Caminho preferido pelo OSPF (azul, custo total 30):
+  Client → S1 → R0 → R1 → R3 → S2 → Server.
+  Caminho preferido pelo RIP (vermelho tracejado, 2 saltos):
+  Client → S1 → R0 → R2 → S2 → Server.}
+\label{fig:topologia}
+\end{figure}
+
+\subsection{Nós e Endereçamento}
+
+A Tabela~\ref{tab:nos} descreve os nós da rede e seus papéis.
+
+\begin{table}[h]
+\centering
+\caption{Nós da topologia}
+\label{tab:nos}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Nó} & \textbf{Imagem} & \textbf{Papel} \\
+\midrule
+client  & alpine:latest        & Origem do tráfego \\
+server  & alpine:latest        & Destino do tráfego \\
+s1, s2  & alpine:latest        & Switches de acesso \\
+r0      & frrouting/frr:latest & Roteador core — ponto de entrada \\
+r1      & frrouting/frr:latest & Caminho preferido pelo OSPF \\
+r2      & frrouting/frr:latest & Caminho preferido pelo RIP / backup OSPF \\
+r3      & frrouting/frr:latest & Ponto de saída via R1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A Tabela~\ref{tab:custos} apresenta os custos OSPF configurados nos enlaces.
+
+\begin{table}[h]
+\centering
+\caption{Custos OSPF dos enlaces e seus significados}
+\label{tab:custos}
+\begin{tabular}{@{}llrl@{}}
+\toprule
+\textbf{Interface} & \textbf{Nó} & \textbf{Custo} & \textbf{Significado} \\
+\midrule
+eth2 & R0 & 10 & Enlace de alta qualidade em direção ao R1 \\
+eth3 & R0 & 40 & Enlace de menor qualidade em direção ao R2 \\
+eth1 & R2 & 40 & Custo simétrico no lado do R2 \\
+demais & — & 10 & Custo padrão \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Com essa configuração, o custo total do caminho via R1 é $10 + 10 + 10 = 30$ e o
+custo total do caminho via R2 é $40 + 10 = 50$. O RIP ignora esses custos e enxerga
+o caminho via R2 como melhor por ter apenas 2 saltos contra 3 do caminho via R1.
+
+% =============================================================================
+\section{Discussão Técnica}
+\label{sec:discussao}
+% =============================================================================
+
+\subsection{Ambiente de Laboratório}
+
+O laboratório foi implementado com as seguintes ferramentas:
+
+\begin{itemize}
+  \item \textbf{Ubuntu 24.04 (WSL2)}: sistema operacional host;
+  \item \textbf{Docker Engine}: \textit{runtime} de containers;
+  \item \textbf{Containerlab 0.75.0}: orquestração da topologia de rede virtual,
+        criando interfaces \textit{veth} entre containers para simular enlaces físicos;
+  \item \textbf{FRRouting (FRR) 9.0}: suíte de protocolos de roteamento que
+        implementa OSPF e RIP nos containers dos roteadores.
+\end{itemize}
+
+Os dois laboratórios — OSPF e RIP — foram executados em paralelo sobre a mesma
+topologia lógica, com os mesmos endereços IP e a mesma estrutura de enlaces.
+
+\subsection{Resultado 1 — Adjacência OSPF}
+
+Após a inicialização do laboratório, todos os roteadores OSPF formaram adjacências
+no estado \textit{Full}, indicando que o banco de dados de topologia (LSDB) estava
+sincronizado e o algoritmo de Dijkstra havia sido executado.
+
+\begin{verbatim}
+Neighbor ID  Pri  State        Up Time  Address    Interface
+1.1.1.1        1  Full/Backup  1m21s    10.0.1.2   eth2
+2.2.2.2        1  Full/Backup  5m41s    10.0.2.2   eth3
+\end{verbatim}
+
+\subsection{Resultado 2 — Seleção de Rota: OSPF vs RIP}
+
+A Tabela~\ref{tab:comparacao} compara a decisão de roteamento de cada protocolo
+para o destino \texttt{10.0.5.0/30} (rede do servidor), extraída das tabelas de
+roteamento de R0 em cada laboratório.
+
+\begin{table}[h]
+\centering
+\caption{Comparação das decisões de roteamento em operação normal}
+\label{tab:comparacao}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Critério} & \textbf{OSPF} & \textbf{RIP} \\
+\midrule
+Algoritmo subjacente    & Dijkstra              & Bellman-Ford distribuído \\
+Métrica utilizada       & Custo do enlace       & Contagem de saltos \\
+Rota escolhida          & R0→R1→R3→S2           & R0→R2→S2 \\
+Saltos                  & 3                     & 2 \\
+Custo / métrica         & 30                    & 2 (saltos) \\
+Caminho de maior qualidade selecionado & Sim   & Não \\
+Limite de escala        & Sem limite prático    & Máximo 15 saltos \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O OSPF selecionou o caminho com três saltos e custo total 30, preterindo o caminho
+com dois saltos mas custo 50. O RIP fez a escolha inversa: o caminho de dois saltos
+foi preferido por ter métrica 2, enquanto o de três saltos tinha métrica 3 — sem
+qualquer consideração sobre a qualidade dos enlaces.
+
+Esse resultado demonstra empiricamente que o critério de seleção é determinante: em
+redes heterogêneas, onde diferentes enlaces possuem capacidades distintas, o uso
+exclusivo da contagem de saltos como métrica leva a decisões subótimas.
+
+\subsection{Resultado 3 — Failover Automático no OSPF}
+
+Para validar a capacidade de reconvergência, a interface \texttt{eth1} do roteador
+R1 foi desativada manualmente, simulando uma falha de enlace:
+
+\begin{verbatim}
+docker exec clab-ospf-lab-r1 ip link set eth1 down
+\end{verbatim}
+
+Após o \textit{dead timer} do OSPF expirar e os LSAs de atualização serem
+propagados, R1 foi removido da tabela de vizinhos e o protocolo recalculou as rotas.
+O tráfego foi automaticamente redirecionado via R2 (custo 50), sem nenhuma
+intervenção manual.
+
+A Tabela~\ref{tab:failover} compara a tabela de roteamento antes e depois da falha.
+
+\begin{table}[h]
+\centering
+\caption{Tabela de roteamento do R0 antes e após falha do enlace R0–R1}
+\label{tab:failover}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Destino} & \textbf{Operação normal} & \textbf{Após falha do R1} \\
+\midrule
+10.0.5.0/30 (servidor) & custo 30, via R1→R3→S2 & custo 50, via R2→S2 \\
+Enlace R0\(\longleftrightarrow \)R1           & presente               & ausente (\textit{link down}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Ao restaurar a interface (\texttt{ip link set eth1 up}), o OSPF reconvergiu
+novamente e reverteu ao caminho via R1 com custo 30, demonstrando que o protocolo
+mantém o caminho ótimo enquanto a topologia estiver disponível.
+
+Uma observação relevante emerge do failover: após a falha, o caminho ativo passou a
+ter \textit{menos} saltos e \textit{maior} custo — reforçando que a métrica do OSPF
+é sempre o custo, independentemente da contagem de saltos.
+
+\subsection{Limitações e Desafios}
+
+O RIP apresenta uma limitação estrutural relevante: o risco de
+\textit{count-to-infinity} em topologias com rotas alternativas, onde atualizações
+incorretas podem circular indefinidamente entre vizinhos até atingir o limite de 15
+saltos \cite{rfc2453}. Esse problema não existe no OSPF, pois cada roteador possui
+um mapa completo e consistente da topologia antes de calcular as rotas.
+
+A ausência de suporte a múltiplas métricas no RIP é sua principal limitação
+estrutural: o protocolo não possui mecanismo para considerar largura de banda,
+latência ou confiabilidade dos enlaces na tomada de decisão de roteamento.
+
+% =============================================================================
+\section{Conclusão}
+\label{sec:conclusao}
+% =============================================================================
+
+Este trabalho demonstrou que o problema de roteamento na Internet pode ser
+naturalmente modelado como um grafo ponderado, onde algoritmos clássicos de caminho
+mínimo têm aplicação direta. O OSPF, ao aplicar o algoritmo de Dijkstra sobre um
+mapa completo da rede, seleciona consistentemente o caminho de menor custo total,
+adaptando-se automaticamente a falhas de enlace. O RIP, por sua vez, utiliza uma
+abordagem mais simples baseada em Bellman-Ford distribuído com contagem de saltos, o
+que pode resultar em decisões subótimas em redes com enlaces heterogêneos.
+
+Os experimentos realizados confirmaram quantitativamente as diferenças: sobre a
+mesma topologia com custos deliberadamente assimétricos, o OSPF escolheu o caminho
+com três saltos e custo 30, enquanto o RIP escolheu o caminho com dois saltos e
+custo efetivo 50. O failover automático do OSPF também foi validado, com
+redirecionamento do tráfego sem intervenção manual após a falha de enlace.
+
+A relação entre a disciplina de Algoritmos e Estruturas de Dados e a infraestrutura
+real da Internet é concreta: cada roteador em produção executa, a cada mudança na
+topologia, algoritmos equivalentes aos estudados em sala de aula. Compreender essa
+conexão é fundamental para projetar, operar e depurar redes de computadores.
+
+% =============================================================================
+\bibliographystyle{sbc}
+\begin{thebibliography}{9}
+
+\bibitem{tanenbaum2011}
+Tanenbaum, A. S. e Wetherall, D. (2011).
+\textit{Redes de Computadores}.
+5ª edição. Pearson Prentice Hall.
+
+\bibitem{cormen2022}
+Cormen, T. H., Leiserson, C. E., Rivest, R. L. e Stein, C. (2022).
+\textit{Introduction to Algorithms}.
+4ª edição. MIT Press.
+
+\bibitem{dijkstra1959}
+Dijkstra, E. W. (1959).
+A note on two problems in connexion with graphs.
+\textit{Numerische Mathematik}, 1(1):269–271.
+
+\bibitem{bellman1958}
+Bellman, R. (1958).
+On a routing problem.
+\textit{Quarterly of Applied Mathematics}, 16(1):87–90.
+
+\bibitem{rfc2328}
+Moy, J. (1998).
+\textit{OSPF Version 2}.
+RFC 2328. Internet Engineering Task Force (IETF).
+Disponível em: \url{https://www.rfc-editor.org/rfc/rfc2328}
+
+\bibitem{rfc2453}
+Malkin, G. (1998).
+\textit{RIP Version 2}.
+RFC 2453. Internet Engineering Task Force (IETF).
+Disponível em: \url{https://www.rfc-editor.org/rfc/rfc2453}
+
+\end{thebibliography}
+
+\end{document}
