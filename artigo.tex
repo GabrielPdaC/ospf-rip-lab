@@ -65,7 +65,7 @@ Para que um pacote de dados chegue ao seu destino, cada roteador no caminho prec
 decidir, de forma autônoma e em tempo real, para qual vizinho encaminhar o tráfego.
 Esse processo é chamado de \textbf{roteamento}, e é regido por \textbf{protocolos
 de roteamento} que os roteadores utilizam para trocar informações sobre a topologia
-da rede e calcular os melhores caminhos \cite{tanenbaum2011}.
+da rede e calcular os melhores caminhos.
 
 Dois dos protocolos mais relevantes nesse contexto são o \textbf{OSPF}
 (\textit{Open Shortest Path First}) e o \textbf{RIP} (\textit{Routing Information
@@ -109,7 +109,7 @@ numérico associado, diz-se que o grafo é \textbf{ponderado}. No contexto de re
 de computadores, os vértices representam roteadores e as arestas representam os
 enlaces físicos ou lógicos entre eles. O peso de cada aresta pode expressar
 latência, largura de banda, custo administrativo ou qualquer métrica relevante para
-a qualidade do enlace \cite{cormen2022}.
+a qualidade do enlace \cite{rfc2328, rfc2453}.
 
 O problema central do roteamento é encontrar o \textbf{caminho de custo mínimo}
 entre um vértice de origem e um vértice de destino. Esse problema é resolvido de
@@ -399,25 +399,17 @@ conexão é fundamental para projetar, operar e depurar redes de computadores.
 \bibliographystyle{sbc}
 \begin{thebibliography}{9}
 
-\bibitem{tanenbaum2011}
-Tanenbaum, A. S. e Wetherall, D. (2011).
-\textit{Redes de Computadores}.
-5ª edição. Pearson Prentice Hall.
-
-\bibitem{cormen2022}
-Cormen, T. H., Leiserson, C. E., Rivest, R. L. e Stein, C. (2022).
-\textit{Introduction to Algorithms}.
-4ª edição. MIT Press.
-
 \bibitem{dijkstra1959}
 Dijkstra, E. W. (1959).
 A note on two problems in connexion with graphs.
-\textit{Numerische Mathematik}, 1(1):269–271.
+\textit{Numerische Mathematik}, 1(1):269--271.
+Disponível em: \url{https://link.springer.com/article/10.1007/BF01386390}
 
 \bibitem{bellman1958}
 Bellman, R. (1958).
 On a routing problem.
-\textit{Quarterly of Applied Mathematics}, 16(1):87–90.
+\textit{Quarterly of Applied Mathematics}, 16(1):87--90.
+Disponível em: \url{https://www.ams.org/journals/qam/1958-16-01/S0033-569X-1958-0102435-6/}
 
 \bibitem{rfc2328}
 Moy, J. (1998).
